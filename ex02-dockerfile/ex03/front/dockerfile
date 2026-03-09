@@ -1,0 +1,8 @@
+# 1. nginx 공식 이미지 사용
+FROM nginx:alpine
+
+# 2. React 빌드 결과물을 nginx html 폴더로 복사
+COPY build/ /usr/share/nginx/html
+
+# 3. nginx 실행
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
