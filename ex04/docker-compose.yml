@@ -1,0 +1,54 @@
+# docker compose 파일 문법 버전 3.8
+version: '3.8'
+services: #실행할 컨테이너들 정의 영역
+  react-front: #같은 네트워크안에서 사용되는 DNS 이름( 컨테이너 이름 사용 안함 )
+    image: kyungjunoh/front-react:1.0 # 도커 파일로 부터 다운 받는 이미지 이름
+    container_name: react # 실행 시킬 컨테이너 이름
+    #build:
+      #context: ./front #폴더 경로
+      #dockerfile: dockerfile # 실행 파일
+    ports:
+      - "20000:80"
+    networks: # 네트워크 자동 생성 및 설정
+      - web-network
+
+  mysql-test:
+    image: kyungjunoh/mysql-8.4:1.0 #도커파일 없이 바로 다운 받기 때문에 버전 꼭 명시
+    container_name: mysql-container
+    ports:
+      - "12345:3306"
+    environment: # 환경변수 설정
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: jpa #database 생성
+    healthcheck: #서버 살아 있는지 확인 명령
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1234"]
+      interval: 5s # 5초에 한번씩 검사
+      retries: 5 # 5번 실패하면 진짜 실패로 서버 중지
+    volumes: # 아래서 만든 mysql 볼륨 연결( 로컬 사용시 ./ 경로 지정)
+      - mysql:/var/lib/mysql
+    networks:
+      - web-network
+
+  api-boot:
+    image: kyungjunoh/api-boot:1.0
+    container_name: api-boot
+    #build:
+      #context: ./api #폴더 경로
+      #dockerfile: dockerfile # 실행 파일
+    depends_on: # mysql이 healthcheck가 성공할때 까지 기다림
+      mysql-test: #특정 서비스 이름
+        condition: service_healthy # service_healthy : healthcheck가 성공인 조건에 boot실행
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    volumes: # 아래서 만든 mysql 볼륨 연결( 로컬 사용시 ./ 경로 지정)
+      - ./api/uploads:/app/uploads
+    networks:
+      - web-network
+
+volumes: # 도커의 볼륨 생성
+  mysql: # [폴더이름]_[mysql]
+
+networks: # 네트워크 생성
+  web-network: # [폴더이름]_[web-network]

@@ -1,0 +1,11 @@
+# 1. Java 17 런타임 사용
+FROM eclipse-temurin:17-jdk-alpine
+
+# 2. 작업 디렉터리 생성
+# /app디렉터리 생성하고 이후 명령어들은 /app을 기준으로 실행된다
+WORKDIR /app
+
+# 3. 빌드한 Jar 파일 복사( app.jar 상대경로 지정시 /app폴더로 이동 )
+COPY basic-0.0.1-SNAPSHOT.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
